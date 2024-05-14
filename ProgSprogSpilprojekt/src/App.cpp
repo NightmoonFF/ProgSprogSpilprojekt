@@ -5,11 +5,27 @@
 #include <string>
 #include <sstream>
 
+#define ASSERT(x) if (!(x)) __debugbreak();
+#define GLCall(x) GLClearError();x;ASSERT(GLLogCall(#x, __FILE__, __LINE__))
+
+static void GLClearError() {
+    while (glGetError() != GL_NO_ERROR); //clears all errors
+}
+
+static bool GLLogCall(const char* function, const char* file, int line) {
+    while (GLenum error = glGetError()) {
+        std::cout << "[OpenGL Error] (" << error << "): " << function << " " << file << ":" << line << std::endl;
+        return false;
+    }
+    return true;
+}
+
 struct ShaderProgramSource {
     std::string VertexSource;
     std::string FragmentSource;
 };
 
+// Takes a .shader file (which contains multiple shaders) and splits it up into the different types
 static ShaderProgramSource ParseShader(const std::string& filepath) {
     std::ifstream stream(filepath);
 
@@ -35,6 +51,7 @@ static ShaderProgramSource ParseShader(const std::string& filepath) {
     return { ss[0].str(), ss[1].str() };
 }
 
+// not sure tbh
 static unsigned int CompileShader(unsigned int type, const std::string& source) {
     unsigned int id = glCreateShader(type);
     const char* src = source.c_str();
@@ -59,7 +76,7 @@ static unsigned int CompileShader(unsigned int type, const std::string& source) 
     return id;
 }
 
-// Provides OpenGL with our actual shader source-code, for it to compile it, link them together to one shader program, and return a unique identifier
+// Provides OpenGL with our shaders to link them together to one shader program to compile, and return a unique identifier
 static unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader) {
     
     unsigned int program = glCreateProgram();
@@ -132,6 +149,8 @@ int main(void)
         It takes in the ID of the buffer we just generated, that we want to select
         Usually you have to specify the size of the buffer.
 
+        Using unsigned int is very important
+
         For glBufferData:
         Specify target of the buffer: an array
         Specify name of the buffer object
@@ -173,21 +192,35 @@ int main(void)
     */
 
 
+    /* Game-Loop happens here: */
     /* Loop until the user closes the window */
-    /* Can be thought of as the Game-Loop */
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
+
+        //---
+
+
         /* 
-           Use if you dont have indexBuffer. Otherwise you'd use glDrawElements
-           BindBuffer is what makes GL know that THAT is the buffer which needs to be drawn here (State machine)
+           glDrawArrays: non indexBuffer
+           glDrawElements: indexBuffer
+           BindBuffer is what makes GL know what is the buffer that needs to be drawn here (it is a State machine)
+           GLCallwrapper is error handling, it allows debugging OpenGL where it would otherwise be very difficult.
+           Ideally all gl-functions should be wrapped
         */
+
         //glDrawArrays(GL_TRIANGLES, 0, 3);
 
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr));
+        
+
+
+
+
+        //---
 
 
         /* Swap front and back buffers */
