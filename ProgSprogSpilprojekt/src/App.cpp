@@ -106,42 +106,57 @@ int main(void)
 
 
 
-
     // An array of the positions we want to use for the triangle
-    float positions[6] = {
-        -0.5f, -0.5f,
-         0.0f,  0.5f,
-         0.5f, -0.5f
+    float positions[] = {
+        -0.5f, -0.5f, // 0
+         0.5f, -0.5f, // 1
+         0.5f,  0.5f, // 2
+        -0.5f,  0.5f  // 3
     };
+
+    // Index buffer - render a square without providing duplicate vertice positions
+    unsigned int indices[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+
+#pragma region Array Buffer
 
     /*
         Create a buffer with param of how many (one),
         and we put in an unsigned integers address as the pointer
         Gives back an ID (the address pointer? not sure)
-    */
-    unsigned int buffer;
-    glGenBuffers(1, &buffer);
 
-    /* 
         Selecting in GL is called binding.
         Since this is a buffer of memory, we use an array buffer
         It takes in the ID of the buffer we just generated, that we want to select
         Usually you have to specify the size of the buffer.
+
+        For glBufferData:
+        Specify target of the buffer: an array
+        Specify name of the buffer object
+        Specify the size in bytes of buffer objects new data store. (We have 6 positions in float, so size will be the bytes of 6 floats)
+        Specify a pointer to data that will be copied into the data store for init
+        Specify usage, where we in this case just want the object drawn
     */
+    unsigned int buffer;
+    glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), positions, GL_STATIC_DRAW);
 
-    /*
-       Specify target of the buffer: an array
-       Specify name of the buffer object 
-       Specify the size in bytes of buffer objects new data store. (We have 6 positions in float, so size will be the bytes of 6 floats)
-       Specify a pointer to data that will be copied into the data store for init
-       Specify usage, where we in this case just want the object drawn 
-    */
-    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
+#pragma endregion
 
-    /*  */
+
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+
+    // Index Buffer Object
+    unsigned int ibo;
+    glGenBuffers(1, &ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * 2 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+
+
 
     ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
     unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
@@ -169,7 +184,10 @@ int main(void)
            Use if you dont have indexBuffer. Otherwise you'd use glDrawElements
            BindBuffer is what makes GL know that THAT is the buffer which needs to be drawn here (State machine)
         */
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        //glDrawArrays(GL_TRIANGLES, 0, 3);
+
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
 
         /* Swap front and back buffers */
