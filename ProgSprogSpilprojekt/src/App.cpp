@@ -1,24 +1,17 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 
-#define ASSERT(x) if (!(x)) __debugbreak();
-#define GLCall(x) GLClearError();x;ASSERT(GLLogCall(#x, __FILE__, __LINE__))
+#include "Renderer.h"
 
-static void GLClearError() {
-    while (glGetError() != GL_NO_ERROR); //clears all errors
-}
+#include "IndexBuffer.h"
+#include "VertexBuffer.h"
 
-static bool GLLogCall(const char* function, const char* file, int line) {
-    while (GLenum error = glGetError()) {
-        std::cout << "[OpenGL Error] (" << error << "): " << function << " " << file << ":" << line << std::endl;
-        return false;
-    }
-    return true;
-}
+
 
 struct ShaderProgramSource {
     std::string VertexSource;
@@ -115,122 +108,132 @@ int main(void)
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
+    // Syncrhronizes without v-sync?
+    glfwSwapInterval(1);
+
+
     if (glewInit() != GLEW_OK)
         std::cout << "Error?" << std::endl;
 
     std::cout << "OpenGL: " << glGetString(GL_VERSION) << std::endl;
 
-
-
-
-    // An array of the positions we want to use for the triangle
-    float positions[] = {
-        -0.5f, -0.5f, // 0
-         0.5f, -0.5f, // 1
-         0.5f,  0.5f, // 2
-        -0.5f,  0.5f  // 3
-    };
-
-    // Index buffer - render a square without providing duplicate vertice positions
-    unsigned int indices[] = {
-        0, 1, 2,
-        2, 3, 0
-    };
-
-#pragma region Array Buffer
-
-    /*
-        Create a buffer with param of how many (one),
-        and we put in an unsigned integers address as the pointer
-        Gives back an ID (the address pointer? not sure)
-
-        Selecting in GL is called binding.
-        Since this is a buffer of memory, we use an array buffer
-        It takes in the ID of the buffer we just generated, that we want to select
-        Usually you have to specify the size of the buffer.
-
-        Using unsigned int is very important
-
-        For glBufferData:
-        Specify target of the buffer: an array
-        Specify name of the buffer object
-        Specify the size in bytes of buffer objects new data store. (We have 6 positions in float, so size will be the bytes of 6 floats)
-        Specify a pointer to data that will be copied into the data store for init
-        Specify usage, where we in this case just want the object drawn
-    */
-    unsigned int buffer;
-    glGenBuffers(1, &buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), positions, GL_STATIC_DRAW);
-
-#pragma endregion
-
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
-
-    // Index Buffer Object
-    unsigned int ibo;
-    glGenBuffers(1, &ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * 2 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
-
-
-
-    ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
-    unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
-    glUseProgram(shader);
-
-    /* 
-    Primary purpose of vertexShader is to tell openGL to tell where you want that vertex to be in your screenspace. 
-    It runs for each vertex, in this case 3 times.
-
-    The fagment shader or pixel shader, is what then rasterizes (fills in) the triangle of the pixels in the window or screenspace.
-    Primary purpose of this type of shader, is to decide what each individual pixel should be (and at what time?)
-    this fragment shader can be potentially called potentially millions of times, so as little calculation as possible should happen in the vertex shader, which can then
-    be passed to the fragment shader 
-    */
-
-
-    /* Game-Loop happens here: */
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
     {
-        /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
 
 
-        //---
+        // An array of the positions we want to use for the triangle
+        float positions[] = {
+            -0.5f, -0.5f, // 0
+             0.5f, -0.5f, // 1
+             0.5f,  0.5f, // 2
+            -0.5f,  0.5f  // 3
+        };
+
+        // Index buffer - render a square without providing duplicate vertice positions
+        unsigned int indices[] = {
+            0, 1, 2,
+            2, 3, 0
+        };
+
+
+        /*
+            Create a buffer with param of how many (one),
+            and we put in an unsigned integers address as the pointer
+            Gives back an ID (the address pointer? not sure)
+
+            Selecting in GL is called binding.
+            Since this is a buffer of memory, we use an array buffer
+            It takes in the ID of the buffer we just generated, that we want to select
+            Usually you have to specify the size of the buffer.
+
+            Using unsigned int is very important
+
+            For glBufferData:
+            Specify target of the buffer: an array
+            Specify name of the buffer object
+            Specify the size in bytes of buffer objects new data store. (We have 6 positions in float, so size will be the bytes of 6 floats)
+            Specify a pointer to data that will be copied into the data store for init
+            Specify usage, where we in this case just want the object drawn
+        */
+
+        VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+
+
+        IndexBuffer ib(indices, 6);
+
+
+
+
+        ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
+        unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
+        GLCall(glUseProgram(shader));
+
+        int location = glGetUniformLocation(shader, "u_Color"); // retrieve location of u_Color
+        ASSERT(location != -1);
+        GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f)); // set data in shader for u_Color
+
 
 
         /* 
-           glDrawArrays: non indexBuffer
-           glDrawElements: indexBuffer
-           BindBuffer is what makes GL know what is the buffer that needs to be drawn here (it is a State machine)
-           GLCallwrapper is error handling, it allows debugging OpenGL where it would otherwise be very difficult.
-           Ideally all gl-functions should be wrapped
+        Primary purpose of vertexShader is to tell openGL to tell where you want that vertex to be in your screenspace. 
+        It runs for each vertex, in this case 3 times.
+
+        The fagment shader or pixel shader, is what then rasterizes (fills in) the triangle of the pixels in the window or screenspace.
+        Primary purpose of this type of shader, is to decide what each individual pixel should be (and at what time?)
+        this fragment shader can be potentially called potentially millions of times, so as little calculation as possible should happen in the vertex shader, which can then
+        be passed to the fragment shader 
         */
 
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        float r = 0.0f;
+        float increment = 0.05f;
+
+        /* Game-Loop happens here: */
+        /* Loop until the user closes the window */
+        while (!glfwWindowShouldClose(window))
+        {
+            /* Render here */
+            glClear(GL_COLOR_BUFFER_BIT);
 
 
-        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr));
+            /* 
+               glDrawArrays: non indexBuffer
+               glDrawElements: indexBuffer
+               BindBuffer is what makes GL know what is the buffer that needs to be drawn here (it is a State machine)
+               GLCallwrapper is error handling, it allows debugging OpenGL where it would otherwise be very difficult.
+               Ideally all gl-functions should be wrapped
+            */
+
         
+            GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f)); // modify the uniform at "location"
+        
+            ib.Bind();
+        
+            GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr)); // Draw shape
+            
 
+            // Rainbow Flash
+            if (r > 1.0f)
+                increment = -0.05f;
+            else if (r < 0.0f)
+                increment = 0.05f;
 
+            r += increment;
+       
 
+            /* Swap front and back buffers */
+            glfwSwapBuffers(window);
 
-        //---
+            /* Poll for and process events */
+            glfwPollEvents();
+        }
 
+        GLCall(glDeleteProgram(shader));
 
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
-
-        /* Poll for and process events */
-        glfwPollEvents();
     }
-
-    glDeleteProgram(shader);
 
     glfwTerminate();
     return 0;
