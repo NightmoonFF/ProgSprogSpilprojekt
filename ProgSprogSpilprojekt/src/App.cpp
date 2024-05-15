@@ -10,7 +10,7 @@
 
 #include "IndexBuffer.h"
 #include "VertexBuffer.h"
-
+#include "VertexArray.h"
 
 
 struct ShaderProgramSource {
@@ -155,17 +155,19 @@ int main(void)
             Specify usage, where we in this case just want the object drawn
         */
 
+
+        unsigned int vao;
+        GLCall(glGenVertexArrays(1, &vao));
+        GLCall(glBindVertexArray(vao));
+
+        VertexArray va;
         VertexBuffer vb(positions, 4 * 2 * sizeof(float));
 
-
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
-
+        VertexBufferLayout layout;
+        layout.Push<float>(2);
+        va.AddBuffer(vb, layout);
 
         IndexBuffer ib(indices, 6);
-
-
-
 
         ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
         unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
@@ -210,6 +212,7 @@ int main(void)
         
             GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f)); // modify the uniform at "location"
         
+            va.Bind();
             ib.Bind();
         
             GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr)); // Draw shape
