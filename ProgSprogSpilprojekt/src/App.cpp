@@ -56,6 +56,7 @@ void App::Run() {
     Shader shader("res/shaders/Sphere.shader");
     shader.Bind();
     shader.SetUniformMat4f("u_MVP", mvp);
+    shader.SetUniform4f("u_Color", 1.0f, 0.0f, 0.0f, 0.5f);
 
     va.Unbind();
     vb.Unbind();
@@ -65,23 +66,25 @@ void App::Run() {
     Renderer renderer;
 
     float rotationAngle = 0.0f;
-
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     
     while (!glfwWindowShouldClose(window)) {
         
         renderer.Clear();
         
+
+
         shader.Bind();
-        //shader.SetUniformMat4f("u_MVP", mvp);
+
+        model = Mat4::rotateY(rotationAngle) * model;
+        
+        mvp = proj * view * model;
+        
+        shader.SetUniformMat4f("u_MVP", mvp);
 
         renderer.Draw(va, ib, shader);
         
-        rotationAngle += 0.01f;
-
-        model = Mat4::rotateY(rotationAngle) * model; // Rotate around the y-axis
-        mvp = proj * view * model;
-        
-        
+        rotationAngle += 0.000001f;
         //currentTime = glfwGetTime();
         /*if (currentTime - lastTime >= 0.1) {
             snake.move();
