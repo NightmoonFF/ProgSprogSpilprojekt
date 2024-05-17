@@ -1,19 +1,24 @@
 #pragma once
 
 #include <vector>
-#include <glm/glm.hpp>
+#include "VertexArray.h"
+#include "IndexBuffer.h"
+#include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
 
 class Sphere {
 public:
     Sphere(float radius, unsigned int sectorCount, unsigned int stackCount);
-
-    const std::vector<float>& getVertices() const { return vertices; }
-    const std::vector<unsigned int>& getIndices() const { return indices; }
+    VertexArray va;
+    VertexBuffer vb;
+    IndexBuffer ib;
+    //const VertexArray& GetVertexArray() const { return va; }
+    //const IndexBuffer& GetIndexBuffer() const { return ib; }
 
 private:
+    void GenerateSphere(float radius, unsigned int sectorCount, unsigned int stackCount);
+
+
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
-    float radius;
-    unsigned int sectorCount;
-    unsigned int stackCount;
 };

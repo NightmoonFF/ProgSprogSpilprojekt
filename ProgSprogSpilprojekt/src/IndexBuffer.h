@@ -13,5 +13,7 @@ public:
 	void Bind() const;
 	void Unbind() const;
 
+	void UpdateData(const void* data, unsigned int size);
+
 	inline unsigned int GetCount() const { return m_Count; }
 };

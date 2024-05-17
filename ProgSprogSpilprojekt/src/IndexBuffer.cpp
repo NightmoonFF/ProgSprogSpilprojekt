@@ -23,3 +23,9 @@ void IndexBuffer::Bind() const {
 void IndexBuffer::Unbind() const {
     GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
+
+void IndexBuffer::UpdateData(const void* data, unsigned int size) {
+    Bind();
+    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
+    Unbind();
+}

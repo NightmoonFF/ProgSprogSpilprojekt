@@ -2,51 +2,52 @@
 #include <cmath>
 
 Sphere::Sphere(float radius, unsigned int sectorCount, unsigned int stackCount)
-    : radius(radius), sectorCount(sectorCount), stackCount(stackCount) {
+    : vb(nullptr, 0), ib(nullptr, 0) {
+    printf("Creating Sphere\n");
+    
+    GenerateSphere(radius, sectorCount, stackCount);
 
+    vb.UpdateData(vertices.data(), vertices.size() * sizeof(float));
+    va.Bind();
+    VertexBufferLayout layout;
+    layout.Push<float>(3);
+    va.AddBuffer(vb, layout);
+    ib.UpdateData(indices.data(), indices.size());
+    printf("Sphere created\n");
+}
+
+void Sphere::GenerateSphere(float radius, unsigned int sectorCount, unsigned int stackCount) {
     const float PI = 3.14159265359f;
-    float x, y, z, xy;                          // vertex position
-    float nx, ny, nz, lengthInv = 1.0f / radius;    // normal
-    float s, t;                                 // texCoord
-
+    float x, y, z, xy;
     float sectorStep = 2 * PI / sectorCount;
     float stackStep = PI / stackCount;
     float sectorAngle, stackAngle;
 
     for (unsigned int i = 0; i <= stackCount; ++i) {
-        stackAngle = PI / 2 - i * stackStep;        // starting from pi/2 to -pi/2
-        xy = radius * cosf(stackAngle);             // r * cos(u)
-        z = radius * sinf(stackAngle);              // r * sin(u)
+        stackAngle = PI / 2 - i * stackStep;
+        xy = radius * cosf(stackAngle);
+        z = radius * sinf(stackAngle);
 
-        // add (sectorCount+1) vertices per stack
-        // the first and last vertices have same position and normal, but different tex coords
         for (unsigned int j = 0; j <= sectorCount; ++j) {
-            sectorAngle = j * sectorStep;           // starting from 0 to 2pi
-
-            // vertex position (x, y, z)
-            x = xy * cosf(sectorAngle);             // r * cos(u) * cos(v)
-            y = xy * sinf(sectorAngle);             // r * cos(u) * sin(v)
+            sectorAngle = j * sectorStep;
+            x = xy * cosf(sectorAngle);
+            y = xy * sinf(sectorAngle);
             vertices.push_back(x);
             vertices.push_back(y);
             vertices.push_back(z);
         }
     }
 
-    // generate CCW index list of sphere triangles
     for (unsigned int i = 0; i < stackCount; ++i) {
-        unsigned int k1 = i * (sectorCount + 1);     // beginning of current stack
-        unsigned int k2 = k1 + sectorCount + 1;      // beginning of next stack
+        unsigned int k1 = i * (sectorCount + 1);
+        unsigned int k2 = k1 + sectorCount + 1;
 
         for (unsigned int j = 0; j < sectorCount; ++j, ++k1, ++k2) {
-            // 2 triangles per sector excluding the first and last stacks
-            // k1 => k2 => k1+1
             if (i != 0) {
                 indices.push_back(k1);
                 indices.push_back(k2);
                 indices.push_back(k1 + 1);
             }
-
-            // k1+1 => k2 => k2+1
             if (i != (stackCount - 1)) {
                 indices.push_back(k1 + 1);
                 indices.push_back(k2);
