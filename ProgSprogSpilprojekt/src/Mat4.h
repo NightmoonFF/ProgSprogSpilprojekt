@@ -66,4 +66,19 @@ public:
                 data[i][3] * other.data[3][j];
         return result;
     }
+
+    static Mat4 rotateY(float angle) {
+        float cosA = std::cos(angle);
+        float sinA = std::sin(angle);
+
+        Mat4 rotationMatrix;
+        rotationMatrix.data[0][0] = cosA;
+        rotationMatrix.data[0][2] = sinA;
+        rotationMatrix.data[1][1] = 1.0f;
+        rotationMatrix.data[2][0] = -sinA;
+        rotationMatrix.data[2][2] = cosA;
+        rotationMatrix.data[3][3] = 1.0f;
+
+        return rotationMatrix;
+    }
 };

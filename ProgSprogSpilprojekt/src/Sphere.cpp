@@ -1,19 +1,21 @@
 #include "Sphere.h"
 #include <cmath>
 
-Sphere::Sphere(float radius, unsigned int sectorCount, unsigned int stackCount)
-    : vb(nullptr, 0), ib(nullptr, 0) {
+Sphere::Sphere(float radius, unsigned int sectorCount, unsigned int stackCount) {
+
     printf("Creating Sphere\n");
     
     GenerateSphere(radius, sectorCount, stackCount);
-
-    vb.UpdateData(vertices.data(), vertices.size() * sizeof(float));
-    va.Bind();
-    VertexBufferLayout layout;
-    layout.Push<float>(3);
-    va.AddBuffer(vb, layout);
-    ib.UpdateData(indices.data(), indices.size());
-    printf("Sphere created\n");
+    
+    //vb.UpdateData(vertices.data(), vertices.size() * sizeof(float));
+    //
+    // va.Bind();
+    // 
+    //VertexBufferLayout layout;
+    //layout.Push<float>(3);
+    //va.AddBuffer(vb, layout);
+    //ib.UpdateData(indices.data(), indices.size());
+    //printf("Sphere created\n");
 }
 
 void Sphere::GenerateSphere(float radius, unsigned int sectorCount, unsigned int stackCount) {

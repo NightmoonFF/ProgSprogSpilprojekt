@@ -1,3 +1,5 @@
+#pragma once
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "Snake.h"
@@ -19,12 +21,8 @@ private:
 
     GLFWwindow* window;
     Renderer renderer;
-    Sphere sphere;
-    Snake snake;
-    Shader shader;
     Mat4 proj, view, model, mvp;
 
-    float lastTime, currentTime;
     void ProcessInput();
     void Update();
     void Render();
