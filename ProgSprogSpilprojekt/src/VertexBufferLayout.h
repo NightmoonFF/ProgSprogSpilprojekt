@@ -1,11 +1,13 @@
+#pragma once
+
 #include <vector>
 #include <GL/glew.h>
 #include "Renderer.h"
 #include <stdexcept>
 
 struct VertexBufferElement {
-	unsigned int count;
 	unsigned int type;
+	unsigned int count;
 	unsigned char normalized;
 
 	static unsigned int GetSizeOfType(unsigned int type) {
@@ -42,7 +44,7 @@ public:
 	void Push<unsigned int>(unsigned int count)
 	{
 		m_Elements.push_back({ GL_UNSIGNED_INT, count, GL_FALSE });
-		m_Stride += count * VertexBufferElement::GetSizeOfType(GL_UNSIGNED_INT) * count;
+		m_Stride += count * VertexBufferElement::GetSizeOfType(GL_UNSIGNED_INT);
 	}
 	
 	template<>
